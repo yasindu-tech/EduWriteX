@@ -6,6 +6,10 @@
   <title>EduWriteX Bill Generator</title>
   <!-- jsPDF library for PDF generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Optionally, Bootstrap JS for components -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -16,11 +20,13 @@
       background-color: #fff;
     }
     .logo {
-      width: 200px;
-      margin-bottom: 20px;
       display: block;
       margin-left: auto;
       margin-right: auto;
+      margin-bottom: 20px;
+      max-width: 200px;
+      width: 100%;
+      height: auto;
     }
     h2 {
       text-align: center;
@@ -157,7 +163,6 @@
     
     /* PDF Preview Styles */
     .pdf-preview {
-      display: none;
       border: 1px solid #ddd;
       padding: 20px;
       margin: 20px 0;
@@ -191,39 +196,9 @@
     }
 
     @media (max-width: 600px) {
-      body {
-        padding: 5px;
-        max-width: 100vw;
-        font-size: 15px;
-      }
       .logo {
         width: 120px;
         margin-bottom: 10px;
-      }
-      .form-container {
-        margin-top: 10px;
-        padding: 0 2px;
-      }
-      input, select, button {
-        font-size: 15px;
-        padding: 8px;
-        margin: 7px 0;
-      }
-      table, th, td {
-        font-size: 14px;
-        padding: 6px;
-      }
-      .additional-items {
-        padding: 8px;
-        margin: 10px 0;
-      }
-      .item-row {
-        flex-direction: column;
-        gap: 5px;
-      }
-      .add-item-btn, .toggle-btn {
-        font-size: 15px;
-        padding: 8px 10px;
       }
       .pdf-preview {
         padding: 8px;
@@ -232,65 +207,60 @@
     }
   </style>
 </head>
-<body>
-
-  <!-- Logo -->
-  <img src="logo.png" class="logo" alt="EduWriteX Logo"/>
-
-  <h2>Bill Generator</h2>
-
-  <div class="form-container">
-    <input type="text" id="customer" placeholder="Customer Name" />
-    <input type="text" id="address" placeholder="Customer Address (optional)" />
-    <input type="number" id="pages" placeholder="Number of Pages" />
-    <input type="number" id="typeCost" placeholder="Typing Cost per Page (Rs.)" />
-
-    <select id="account">
-      <option value="Acc NO: 013020753221 | D.G.Y Sulochana | Hatton National Bank - Galle">HNB - Yasindu
-Acc NO: 013020753221
-D.G.Y Sulochana
-Hatton National Bank - Galle</option>
-      <option value="Acc NO: 5566065 | D.G.Y Sulochana | Bank Of Ceylon - Imaduwa">BOC - Yasindu
-Acc NO: 5566065
-D.G.Y Sulochana
-Bank Of Ceylon - Imaduwa</option>
-      <option value="Acc NO: 1069 5277 5694 | G.A.S Thathsarani | Sampath Bank - Homagama">Sampath - Sugandhya
-Acc NO: 1069 5277 5694
-G.A.S Thathsarani
-Sampath Bank - Homagama</option>
-    </select>
-
-    <!-- Toggle Button for Additional Items -->
-    <button type="button" class="toggle-btn" id="toggleAdditionalItems" onclick="toggleAdditionalItems()">
-      + Add Additional Items
-    </button>
-
-    <!-- Additional Items Section (hidden by default) -->
-    <div class="additional-items hidden" id="additionalItemsSection">
-      <h3>Additional Items</h3>
-      <div id="additionalItemsContainer">
-        <div class="item-row">
-          <input type="text" class="item-name" placeholder="Item Name" />
-          <input type="text" class="item-description" placeholder="Description" />
-          <input type="number" class="item-cost" placeholder="Cost (Rs.)" />
+<body class="bg-light">
+    <div class="container py-3">
+      <!-- Logo -->
+      <div class="text-center mb-3">
+        <img src="logo.png" class="logo img-fluid" alt="EduWriteX Logo" style="max-width:200px;"/>
+      </div>
+      <h2 class="text-center mb-4">Bill Generator</h2>
+      <form class="form-container bg-white p-3 rounded shadow-sm">
+        <div class="mb-3">
+          <input type="text" id="customer" class="form-control" placeholder="Customer Name" />
+        </div>
+        <div class="mb-3">
+          <input type="text" id="address" class="form-control" placeholder="Customer Address (optional)" />
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <input type="number" id="pages" class="form-control" placeholder="Number of Pages" />
+          </div>
+          <div class="col-6">
+            <input type="number" id="typeCost" class="form-control" placeholder="Typing Cost per Page (Rs.)" />
+          </div>
+        </div>
+        <div class="mb-3">
+          <select id="account" class="form-select">
+            <option value="Acc NO: 013020753221 | D.G.Y Sulochana | Hatton National Bank - Galle">HNB - Yasindu | Acc NO: 013020753221 | D.G.Y Sulochana | Hatton National Bank - Galle</option>
+            <option value="Acc NO: 5566065 | D.G.Y Sulochana | Bank Of Ceylon - Imaduwa">BOC - Yasindu | Acc NO: 5566065 | D.G.Y Sulochana | Bank Of Ceylon - Imaduwa</option>
+            <option value="Acc NO: 1069 5277 5694 | G.A.S Thathsarani | Sampath Bank - Homagama">Sampath - Sugandhya | Acc NO: 1069 5277 5694 | G.A.S Thathsarani | Sampath Bank - Homagama</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-success w-100 mb-2 toggle-btn" id="toggleAdditionalItems" onclick="toggleAdditionalItems()">+ Add Additional Items</button>
+        <div class="additional-items hidden mb-3" id="additionalItemsSection">
+          <h3 class="h6">Additional Items</h3>
+          <div id="additionalItemsContainer">
+            <div class="row g-2 item-row mb-2">
+              <div class="col-4"><input type="text" class="form-control item-name" placeholder="Item Name" /></div>
+              <div class="col-5"><input type="text" class="form-control item-description" placeholder="Description" /></div>
+              <div class="col-3"><input type="number" class="form-control item-cost" placeholder="Cost (Rs.)" /></div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary add-item-btn" onclick="addItemRow()">+ Add Another Item</button>
+        </div>
+        <button type="button" onclick="generatePDF()" class="btn btn-primary w-100">Generate PDF</button>
+      </form>
+      <!-- PDF Preview (hidden by default) -->
+      <div id="pdfPreview" class="pdf-preview mt-4">
+        <div class="bill-header">
+          <h1>EduWriteX</h1>
+          <h2>Invoice</h2>
+        </div>
+        <div class="bill-details" id="billDetails">
+          <!-- Bill details will be populated here -->
         </div>
       </div>
-      <button type="button" class="add-item-btn" onclick="addItemRow()">+ Add Another Item</button>
     </div>
-
-    <button onclick="generatePDF()">Generate PDF</button>
-  </div>
-
-  <!-- PDF Preview (hidden by default) -->
-  <div id="pdfPreview" class="pdf-preview">
-    <div class="bill-header">
-      <h1>EduWriteX</h1>
-      <h2>Invoice</h2>
-    </div>
-    <div class="bill-details" id="billDetails">
-      <!-- Bill details will be populated here -->
-    </div>
-  </div>
 
   <script>
     function toggleAdditionalItems() {
@@ -313,11 +283,11 @@ Sampath Bank - Homagama</option>
     function addItemRow() {
       const container = document.getElementById('additionalItemsContainer');
       const newRow = document.createElement('div');
-      newRow.className = 'item-row';
+      newRow.className = 'row g-2 item-row mb-2';
       newRow.innerHTML = `
-        <input type="text" class="item-name" placeholder="Item Name" />
-        <input type="text" class="item-description" placeholder="Description" />
-        <input type="number" class="item-cost" placeholder="Cost (Rs.)" />
+        <div class="col-4"><input type="text" class="form-control item-name" placeholder="Item Name" /></div>
+        <div class="col-5"><input type="text" class="form-control item-description" placeholder="Description" /></div>
+        <div class="col-3"><input type="number" class="form-control item-cost" placeholder="Cost (Rs.)" /></div>
       `;
       container.appendChild(newRow);
     }
