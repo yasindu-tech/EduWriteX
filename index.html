@@ -236,7 +236,7 @@
           </select>
         </div>
         <button type="button" class="btn btn-success w-100 mb-2 toggle-btn" id="toggleAdditionalItems" onclick="toggleAdditionalItems()">+ Add Additional Items</button>
-        <div class="additional-items hidden mb-3" id="additionalItemsSection">
+        <div class="additional-items hidden mb-3 d-none" id="additionalItemsSection">
           <h3 class="h6">Additional Items</h3>
           <div id="additionalItemsContainer">
             <div class="row g-2 item-row mb-2">
@@ -265,19 +265,24 @@
     function toggleAdditionalItems() {
       const section = document.getElementById('additionalItemsSection');
       const toggleBtn = document.getElementById('toggleAdditionalItems');
-      
-      if (section.classList.contains('hidden')) {
-        // Show the section
+      if (section.classList.contains('d-none')) {
+        section.classList.remove('d-none');
         section.classList.remove('hidden');
         toggleBtn.textContent = '- Hide Additional Items';
         toggleBtn.classList.add('active');
       } else {
-        // Hide the section
+        section.classList.add('d-none');
         section.classList.add('hidden');
         toggleBtn.textContent = '+ Add Additional Items';
         toggleBtn.classList.remove('active');
       }
     }
+
+    // Ensure the section is hidden on load for Bootstrap compatibility
+    document.addEventListener('DOMContentLoaded', function() {
+      const section = document.getElementById('additionalItemsSection');
+      if (section) section.classList.add('d-none');
+    });
 
     function addItemRow() {
       const container = document.getElementById('additionalItemsContainer');
