@@ -11,26 +11,22 @@
   <!-- Optionally, Bootstrap JS for components -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <style>
+    /* Stylish web enhancements */
     body {
-      font-family: 'Segoe UI', sans-serif;
-      padding: 20px;
-      max-width: 700px;
-      margin: auto;
-      color: #222;
-      background-color: #fff;
+      background: linear-gradient(135deg, #e3f0ff 0%, #f9f9f9 100%);
+    }
+    .form-container {
+      box-shadow: 0 4px 24px 0 rgba(26,115,232,0.08), 0 1.5px 4px 0 rgba(26,115,232,0.08);
+      border: 1px solid #e3e3e3;
+      background: #fff;
     }
     .logo {
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-      margin-bottom: 20px;
-      max-width: 200px;
-      width: 100%;
-      height: auto;
+      filter: drop-shadow(0 2px 8px rgba(26,115,232,0.10));
     }
     h2 {
-      text-align: center;
-      margin-top: 0;
+      font-weight: 700;
+      color: #1a73e8;
+      letter-spacing: 1px;
     }
     table {
       width: 100%;
@@ -85,6 +81,8 @@
       padding: 15px;
       border-radius: 5px;
       background-color: #f9f9f9;
+      border-left: 4px solid #1a73e8;
+      background: #f4faff;
     }
     
     .additional-items.hidden {
@@ -101,6 +99,8 @@
       font-size: 16px;
       margin: 10px 0;
       width: 100%;
+      font-weight: 600;
+      letter-spacing: 0.5px;
     }
     
     .toggle-btn:hover {
@@ -118,7 +118,8 @@
     .additional-items h3 {
       margin-top: 0;
       margin-bottom: 15px;
-      color: #333;
+      color: #1a73e8;
+      font-weight: 600;
     }
     
     .item-row {
@@ -144,18 +145,13 @@
     }
     
     .add-item-btn {
-      background-color: #1a73e8;
-      color: white;
+      background: linear-gradient(90deg, #1a73e8 60%, #4fc3f7 100%);
       border: none;
-      padding: 8px 15px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 10px;
+      font-weight: 500;
     }
     
     .add-item-btn:hover {
-      background-color: #1557b0;
+      background: linear-gradient(90deg, #1761c6 60%, #039be5 100%);
     }
     .form-container {
       margin-top: 30px;
@@ -168,6 +164,8 @@
       margin: 20px 0;
       background: white;
       font-family: 'Segoe UI', sans-serif;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px 0 rgba(26,115,232,0.10);
     }
     
     .bill-header {
@@ -196,13 +194,14 @@
     }
 
     @media (max-width: 600px) {
-      .logo {
-        width: 120px;
-        margin-bottom: 10px;
+      .form-container {
+        padding: 1rem 0.5rem !important;
       }
-      .pdf-preview {
-        padding: 8px;
-        margin: 10px 0;
+      .logo {
+        width: 100px;
+      }
+      h2 {
+        font-size: 1.3rem;
       }
     }
   </style>
