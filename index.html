@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduWriteX Bill Generator</title>
+  <!-- jsPDF library for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+      color: #222;
+      background-color: #fff;
+    }
+    .logo {
+      width: 200px;
+      margin-bottom: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    h2 {
+      text-align: center;
+      margin-top: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ccc;
+      text-align: left;
+    }
+    .total {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #1a73e8;
+    }
+    .highlight {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #666;
+      text-align: center;
+    }
+    .section {
+      margin-top: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    
+    select {
+      line-height: 1.4;
+      height: auto;
+      min-height: 45px;
+    }
+    
+    select option {
+      padding: 8px;
+      line-height: 1.4;
+      white-space: pre-line;
+    }
+    
+    .additional-items {
+      margin: 20px 0;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    
+    .additional-items.hidden {
+      display: none;
+    }
+    
+    .toggle-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 0;
+      width: 100%;
+    }
+    
+    .toggle-btn:hover {
+      background-color: #218838;
+    }
+    
+    .toggle-btn.active {
+      background-color: #dc3545;
+    }
+    
+    .toggle-btn.active:hover {
+      background-color: #c82333;
+    }
+    
+    .additional-items h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .item-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .item-row input {
+      margin: 0;
+    }
+    
+    .item-name {
+      flex: 2;
+    }
+    
+    .item-description {
+      flex: 3;
+    }
+    
+    .item-cost {
+      flex: 1;
+    }
+    
+    .add-item-btn {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    
+    .add-item-btn:hover {
+      background-color: #1557b0;
+    }
+    .form-container {
+      margin-top: 30px;
+    }
+    
+    /* PDF Preview Styles */
+    .pdf-preview {
+      display: none;
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin: 20px 0;
+      background: white;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    
+    .bill-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .bill-details {
+      margin: 20px 0;
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .total-row {
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #1a73e8;
+      border-top: 2px solid #1a73e8;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <img src="logo.png" class="logo" alt="EduWriteX Logo"/>
+
+  <h2>Bill Generator</h2>
+
+  <div class="form-container">
+    <input type="text" id="customer" placeholder="Customer Name" />
+    <input type="text" id="address" placeholder="Customer Address (optional)" />
+    <input type="number" id="pages" placeholder="Number of Pages" />
+    <input type="number" id="typeCost" placeholder="Typing Cost per Page (Rs.)" />
+
+    <select id="account">
+      <option value="Acc NO: 013020753221 | D.G.Y Sulochana | Hatton National Bank - Galle">HNB - Yasindu
+Acc NO: 013020753221
+D.G.Y Sulochana
+Hatton National Bank - Galle</option>
+      <option value="Acc NO: 5566065 | D.G.Y Sulochana | Bank Of Ceylon - Imaduwa">BOC - Yasindu
+Acc NO: 5566065
+D.G.Y Sulochana
+Bank Of Ceylon - Imaduwa</option>
+      <option value="Acc NO: 1069 5277 5694 | G.A.S Thathsarani | Sampath Bank - Homagama">Sampath - Sugandhya
+Acc NO: 1069 5277 5694
+G.A.S Thathsarani
+Sampath Bank - Homagama</option>
+    </select>
+
+    <!-- Toggle Button for Additional Items -->
+    <button type="button" class="toggle-btn" id="toggleAdditionalItems" onclick="toggleAdditionalItems()">
+      + Add Additional Items
+    </button>
+
+    <!-- Additional Items Section (hidden by default) -->
+    <div class="additional-items hidden" id="additionalItemsSection">
+      <h3>Additional Items</h3>
+      <div id="additionalItemsContainer">
+        <div class="item-row">
+          <input type="text" class="item-name" placeholder="Item Name" />
+          <input type="text" class="item-description" placeholder="Description" />
+          <input type="number" class="item-cost" placeholder="Cost (Rs.)" />
+        </div>
+      </div>
+      <button type="button" class="add-item-btn" onclick="addItemRow()">+ Add Another Item</button>
+    </div>
+
+    <button onclick="generatePDF()">Generate PDF</button>
+  </div>
+
+  <!-- PDF Preview (hidden by default) -->
+  <div id="pdfPreview" class="pdf-preview">
+    <div class="bill-header">
+      <h1>EduWriteX</h1>
+      <h2>Invoice</h2>
+    </div>
+    <div class="bill-details" id="billDetails">
+      <!-- Bill details will be populated here -->
+    </div>
+  </div>
+
+  <script>
+    function toggleAdditionalItems() {
+      const section = document.getElementById('additionalItemsSection');
+      const toggleBtn = document.getElementById('toggleAdditionalItems');
+      
+      if (section.classList.contains('hidden')) {
+        // Show the section
+        section.classList.remove('hidden');
+        toggleBtn.textContent = '- Hide Additional Items';
+        toggleBtn.classList.add('active');
+      } else {
+        // Hide the section
+        section.classList.add('hidden');
+        toggleBtn.textContent = '+ Add Additional Items';
+        toggleBtn.classList.remove('active');
+      }
+    }
+
+    function addItemRow() {
+      const container = document.getElementById('additionalItemsContainer');
+      const newRow = document.createElement('div');
+      newRow.className = 'item-row';
+      newRow.innerHTML = `
+        <input type="text" class="item-name" placeholder="Item Name" />
+        <input type="text" class="item-description" placeholder="Description" />
+        <input type="number" class="item-cost" placeholder="Cost (Rs.)" />
+      `;
+      container.appendChild(newRow);
+    }
+
+    function getAdditionalItems() {
+      const items = [];
+      const itemRows = document.querySelectorAll('.item-row');
+      
+      itemRows.forEach(row => {
+        const name = row.querySelector('.item-name').value.trim();
+        const description = row.querySelector('.item-description').value.trim();
+        const cost = parseFloat(row.querySelector('.item-cost').value) || 0;
+        
+        if (name && cost > 0) {
+          items.push({ name, description, cost });
+        }
+      });
+      
+      return items;
+    }
+
+    function generatePDF() {
+      const name = document.getElementById('customer').value;
+      const addr = document.getElementById('address').value;
+      const pages = +document.getElementById('pages').value;
+      const typeCost = +document.getElementById('typeCost').value;
+      const account = document.getElementById('account').value;
+
+      if (!name || !pages || !typeCost) {
+        alert("Please fill all required fields");
+        return;
+      }
+
+      const total = pages * typeCost;
+      const additionalItems = getAdditionalItems();
+      const additionalTotal = additionalItems.reduce((sum, item) => sum + item.cost, 0);
+      const grandTotal = total + additionalTotal;
+      const currentDate = new Date().toLocaleDateString();
+      const invoiceNumber = 'INV-' + Date.now();
+
+      // Generate PDF
+      generatePDFFile(name, addr, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber);
+    }
+
+    function generatePDFFile(name, addr, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Load image and add to PDF
+      const logoImg = new Image();
+      logoImg.src = 'logo.png'; // Using logo.png as shown in your HTML
+
+      logoImg.onload = function () {
+        // Add Logo (x, y, width, height)
+        doc.addImage(logoImg, 'PNG', 80, 10, 50, 20);
+
+        // Header text
+        doc.setFontSize(18);
+        doc.setTextColor(0, 0, 0);
+        doc.text('INVOICE', 105, 40, { align: 'center' });
+
+        // Invoice details
+        doc.setFontSize(10);
+        doc.text(`Invoice No: ${invoiceNumber}`, 20, 55);
+        doc.text(`Date: ${currentDate}`, 20, 63);
+
+        // Customer details
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text('Bill To:', 20, 80);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Name: ${name}`, 20, 90);
+        doc.text(`Address: ${addr || "N/A"}`, 20, 100);
+
+        // Service details
+        doc.setFont("helvetica", "bold");
+        doc.text('Service Details:', 20, 120);
+        doc.text('Description', 20, 130);
+        doc.text('Pages', 100, 130);
+        doc.text('Rate/Page', 130, 130);
+        doc.text('Amount', 170, 130);
+
+        doc.line(20, 135, 190, 135);
+
+        // Main typing service
+        doc.setFont("helvetica", "normal");
+        doc.text('Typing Service', 20, 145);
+        doc.text(pages.toString(), 100, 145);
+        doc.text(`Rs. ${typeCost}`, 130, 145);
+        doc.text(`Rs. ${total}`, 170, 145);
+
+        let currentY = 155;
+
+        // Additional items
+        if (additionalItems.length > 0) {
+          additionalItems.forEach((item, index) => {
+            const itemText = item.description ? `${item.name} - ${item.description}` : item.name;
+            doc.text(itemText, 20, currentY);
+            doc.text('1', 100, currentY);
+            doc.text(`Rs. ${item.cost}`, 130, currentY);
+            doc.text(`Rs. ${item.cost}`, 170, currentY);
+            currentY += 10;
+          });
+        }
+
+        // Subtotal line
+        doc.line(20, currentY, 190, currentY);
+        currentY += 10;
+
+        // Subtotals
+        if (additionalItems.length > 0) {
+          doc.setFont("helvetica", "normal");
+          doc.text(`Typing Services: Rs. ${total}`, 130, currentY);
+          currentY += 10;
+          doc.text(`Additional Items: Rs. ${additionalTotal}`, 130, currentY);
+          currentY += 10;
+        }
+
+        // Grand Total
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(`Total: Rs. ${grandTotal}`, 170, currentY + 10, { align: 'right' });
+
+        // Payment details
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text('Payment Details:', 20, currentY + 30);
+        doc.setFont("helvetica", "normal");
+        
+        // Format account details for PDF - split by | and display on separate lines
+        const accountDetails = account.split(' | ');
+        let paymentY = currentY + 40;
+        accountDetails.forEach((detail, index) => {
+          doc.text(detail.trim(), 20, paymentY);
+          paymentY += 8;
+        });
+
+        // Footer
+        doc.setFontSize(10);
+        doc.setTextColor(102, 102, 102);
+        doc.text('This is a computer-generated bill.', 105, 250, { align: 'center' });
+        doc.text('© EduWriteX | Ø=ÜÞ 070-1234567', 105, 258, { align: 'center' });
+        doc.text('✉️ eduwritex@gmail.com', 105, 266, { align: 'center' });
+
+        // Save the PDF to device
+        const fileName = `EduWriteX_Invoice_${name.replace(/\s+/g, '_')}_${invoiceNumber}.pdf`;
+        doc.save(fileName);
+
+        alert(`✅ PDF saved as: ${fileName}`);
+      };
+
+      logoImg.onerror = function () {
+        alert("⚠️ Could not load logo. Please check if 'logo.png' is available in the same folder.");
+      };
+    }
+  </script>
+  </script>
+
+</body>
+</html>
