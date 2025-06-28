@@ -84,28 +84,6 @@
     .add-item-btn:hover {
       background: linear-gradient(90deg, #1761c6 60%, #039be5 100%);
     }
-    .toggle-btn {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 10px 0;
-      width: 100%;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    .toggle-btn:hover {
-      background-color: #218838;
-    }
-    .toggle-btn.active {
-      background-color: #dc3545;
-    }
-    .toggle-btn.active:hover {
-      background-color: #c82333;
-    }
     .logo {
       filter: drop-shadow(0 2px 8px rgba(26,115,232,0.10));
       display: block;
@@ -172,8 +150,7 @@
             <option value="Acc NO: 1069 5277 5694 | G.A.S Thathsarani | Sampath Bank - Homagama">Sampath - Sugandhya | Acc NO: 1069 5277 5694 | G.A.S Thathsarani | Sampath Bank - Homagama</option>
           </select>
         </div>
-        <button type="button" class="btn btn-success w-100 mb-2 toggle-btn" id="toggleAdditionalItems" onclick="toggleAdditionalItems()">+ Add Additional Items</button>
-        <div class="additional-items d-none mb-3" id="additionalItemsSection">
+        <div class="additional-items mb-3" id="additionalItemsSection">
           <h3 class="h6">Additional Items</h3>
           <div id="additionalItemsContainer">
             <div class="row g-2 item-row mb-2">
@@ -199,24 +176,7 @@
     </div>
 
   <script>
-    function toggleAdditionalItems() {
-      const section = document.getElementById('additionalItemsSection');
-      const toggleBtn = document.getElementById('toggleAdditionalItems');
-      if (section.classList.contains('d-none')) {
-        section.classList.remove('d-none');
-        toggleBtn.textContent = '- Hide Additional Items';
-        toggleBtn.classList.add('active');
-      } else {
-        section.classList.add('d-none');
-        toggleBtn.textContent = '+ Add Additional Items';
-        toggleBtn.classList.remove('active');
-      }
-    }
 
-    // Ensure the section is hidden on load for Bootstrap compatibility
-    document.addEventListener('DOMContentLoaded', function () {
-      document.getElementById('additionalItemsSection').classList.add('d-none');
-    });
 
     function addItemRow() {
       const container = document.getElementById('additionalItemsContainer');
