@@ -128,6 +128,9 @@
         <img src="logo.png" class="logo img-fluid" alt="EduWriteX Logo" style="max-width:200px;"/>
       </div>
       <h2 class="text-center mb-4">Bill Generator</h2>
+      <div class="text-center mb-3">
+        <a href="dashboard.html" class="btn btn-outline-primary btn-sm">📊 View Dashboard</a>
+      </div>
       <form class="form-container bg-white p-3 rounded shadow-sm">
         <div class="mb-3">
           <input type="text" id="customer" class="form-control" placeholder="Customer Name" />
@@ -168,6 +171,14 @@
             </div>
           </div>
           <button type="button" class="btn btn-primary add-item-btn" onclick="addItemRow()">+ Add Another Item</button>
+        </div>
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="saveTransaction" checked>
+            <label class="form-check-label" for="saveTransaction">
+              Save transaction to database
+            </label>
+          </div>
         </div>
         <button type="button" onclick="generatePDF()" class="btn btn-primary w-100">Generate PDF</button>
       </form>
@@ -222,6 +233,7 @@
       const pages = +document.getElementById('pages').value;
       const typeCost = +document.getElementById('typeCost').value;
       const account = document.getElementById('account').value;
+      const saveTransaction = document.getElementById('saveTransaction').checked;
 
       if (!name || !pages || !typeCost) {
         alert("Please fill all required fields");
@@ -235,8 +247,72 @@
       const currentDate = new Date().toLocaleDateString();
       const invoiceNumber = 'INV-' + Date.now();
 
+      // Save transaction if checkbox is checked
+      if (saveTransaction) {
+        saveTransactionToStorage({
+          invoiceNumber,
+          date: currentDate,
+          customerName: name,
+          customerAddress: addr,
+          serviceType,
+          pages,
+          costPerUnit: typeCost,
+          serviceTotal: total,
+          additionalItems,
+          additionalTotal,
+          grandTotal,
+          account
+        });
+      }
+
       // Generate PDF
       generatePDFFile(name, addr, serviceType, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber);
+    }
+
+    function saveTransactionToStorage(transaction) {
+      try {
+        // Save to API instead of localStorage
+        fetch('/api/transactions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ transaction })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Transaction saved successfully to server');
+            
+            // Also save to localStorage as backup
+            let localTransactions = JSON.parse(localStorage.getItem('eduwritex_transactions') || '[]');
+            localTransactions.push({
+              ...transaction,
+              timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('eduwritex_transactions', JSON.stringify(localTransactions));
+          } else {
+            throw new Error(data.error || 'Failed to save transaction');
+          }
+        })
+        .catch(error => {
+          console.error('Error saving to server:', error);
+          
+          // Fallback to localStorage if server fails
+          let localTransactions = JSON.parse(localStorage.getItem('eduwritex_transactions') || '[]');
+          localTransactions.push({
+            ...transaction,
+            timestamp: new Date().toISOString()
+          });
+          localStorage.setItem('eduwritex_transactions', JSON.stringify(localTransactions));
+          
+          alert('⚠️ Saved locally - server connection failed');
+        });
+        
+      } catch (error) {
+        console.error('Error saving transaction:', error);
+        alert('⚠️ Error saving transaction');
+      }
     }
 
     function generatePDFFile(name, addr, serviceType, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber) {

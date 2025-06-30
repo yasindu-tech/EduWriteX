@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduWriteX Dashboard</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      background: #f8f9fa;
+    }
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .stats-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 24px 0 rgba(26,115,232,0.08);
+    }
+    .stats-card h3 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .stats-card p {
+      margin: 0;
+      opacity: 0.9;
+    }
+    .transaction-table {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 24px 0 rgba(26,115,232,0.08);
+    }
+    .logo {
+      max-width: 150px;
+      height: auto;
+      filter: drop-shadow(0 2px 8px rgba(26,115,232,0.10));
+    }
+    .btn-export {
+      background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+      border: none;
+      color: #222;
+      font-weight: 600;
+    }
+    .btn-export:hover {
+      background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+      color: #111;
+    }
+    .table th {
+      background-color: #f8fafd;
+      color: #1a73e8;
+      font-weight: 600;
+      border: none;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6c757d;
+    }
+    .empty-state img {
+      max-width: 200px;
+      opacity: 0.5;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 768px) {
+      .dashboard-container {
+        padding: 10px;
+      }
+      .stats-card h3 {
+        font-size: 2rem;
+      }
+      .table-responsive {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Header -->
+    <div class="text-center mb-4">
+      <img src="logo.png" class="logo mb-3" alt="EduWriteX Logo" />
+      <h1 class="text-primary fw-bold">Transaction Dashboard</h1>
+      <p class="text-muted">Monitor your business transactions and performance</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="text-center mb-4">
+      <a href="index.html" class="btn btn-outline-primary">← Back to Bill Generator</a>
+      <button onclick="exportTransactions()" class="btn btn-export ms-2">📄 Export to CSV</button>
+      <button onclick="clearAllTransactions()" class="btn btn-outline-danger ms-2">🗑️ Clear All Data</button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4" id="statsContainer">
+      <div class="col-md-3 col-6">
+        <div class="stats-card">
+          <h3 id="totalTransactions">0</h3>
+          <p>Total Transactions</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stats-card">
+          <h3 id="totalRevenue">Rs. 0</h3>
+          <p>Total Revenue</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stats-card">
+          <h3 id="avgTransaction">Rs. 0</h3>
+          <p>Average Transaction</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stats-card">
+          <h3 id="topService">-</h3>
+          <p>Top Service</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="transaction-table">
+      <h3 class="text-primary mb-3">Recent Transactions</h3>
+      <div class="table-responsive">
+        <table class="table table-hover" id="transactionsTable">
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Service</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="transactionsBody">
+            <!-- Transactions will be populated here -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="mb-3">📊</div>
+        <h4>No Transactions Found</h4>
+        <p>Start generating invoices to see your transaction data here.</p>
+        <a href="index.html" class="btn btn-primary">Create First Invoice</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load and display transactions when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTransactions();
+    });
+
+    function loadTransactions() {
+      try {
+        // Try to load from server first
+        fetch('/api/transactions')
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.data.length > 0) {
+              console.log('Loaded from server:', data.data.length, 'transactions');
+              displayTransactionsData(data.data);
+            } else {
+              // Fallback to localStorage
+              loadFromLocalStorage();
+            }
+          })
+          .catch(error => {
+            console.error('Error loading from server:', error);
+            // Fallback to localStorage
+            loadFromLocalStorage();
+          });
+      } catch (error) {
+        console.error('Error loading transactions:', error);
+        loadFromLocalStorage();
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const transactions = JSON.parse(localStorage.getItem('eduwritex_transactions') || '[]');
+        console.log('Loaded from localStorage:', transactions.length, 'transactions');
+        displayTransactionsData(transactions);
+      } catch (error) {
+        console.error('Error loading from localStorage:', error);
+        showEmptyState();
+      }
+    }
+
+    function displayTransactionsData(transactions) {
+      if (transactions.length === 0) {
+        showEmptyState();
+        return;
+      }
+
+      hideEmptyState();
+      displayStatistics(transactions);
+      displayTransactions(transactions);
+    }
+
+    function displayStatistics(transactions) {
+      const totalTransactions = transactions.length;
+      const totalRevenue = transactions.reduce((sum, t) => sum + t.grandTotal, 0);
+      const avgTransaction = totalRevenue / totalTransactions;
+      
+      // Find top service
+      const serviceCounts = {};
+      transactions.forEach(t => {
+        serviceCounts[t.serviceType] = (serviceCounts[t.serviceType] || 0) + 1;
+      });
+      const topService = Object.keys(serviceCounts).reduce((a, b) => serviceCounts[a] > serviceCounts[b] ? a : b, '-');
+
+      document.getElementById('totalTransactions').textContent = totalTransactions;
+      document.getElementById('totalRevenue').textContent = `Rs. ${totalRevenue.toLocaleString()}`;
+      document.getElementById('avgTransaction').textContent = `Rs. ${Math.round(avgTransaction).toLocaleString()}`;
+      document.getElementById('topService').textContent = topService.replace(' Service', '');
+    }
+
+    function displayTransactions(transactions) {
+      const tbody = document.getElementById('transactionsBody');
+      tbody.innerHTML = '';
+
+      // Sort by date (newest first)
+      transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      transactions.forEach(transaction => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><span class="badge bg-primary">${transaction.invoiceNumber}</span></td>
+          <td>${transaction.date}</td>
+          <td>
+            <strong>${transaction.customerName}</strong>
+            ${transaction.customerAddress ? `<br><small class="text-muted">${transaction.customerAddress}</small>` : ''}
+          </td>
+          <td>
+            <span class="badge bg-secondary">${transaction.serviceType}</span>
+            <br><small class="text-muted">${transaction.pages} pages/words</small>
+          </td>
+          <td><strong class="text-success">Rs. ${transaction.grandTotal.toLocaleString()}</strong></td>
+          <td><span class="badge bg-success">Completed</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function showEmptyState() {
+      document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('transactionsTable').style.display = 'none';
+      
+      // Reset statistics
+      document.getElementById('totalTransactions').textContent = '0';
+      document.getElementById('totalRevenue').textContent = 'Rs. 0';
+      document.getElementById('avgTransaction').textContent = 'Rs. 0';
+      document.getElementById('topService').textContent = '-';
+    }
+
+    function hideEmptyState() {
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('transactionsTable').style.display = 'table';
+    }
+
+    function exportTransactions() {
+      try {
+        // Try to get data from server first, fallback to localStorage
+        fetch('/api/transactions')
+          .then(response => response.json())
+          .then(data => {
+            let transactions = [];
+            if (data.success && data.data.length > 0) {
+              transactions = data.data;
+            } else {
+              transactions = JSON.parse(localStorage.getItem('eduwritex_transactions') || '[]');
+            }
+            
+            exportTransactionsData(transactions);
+          })
+          .catch(error => {
+            console.error('Error fetching from server:', error);
+            const transactions = JSON.parse(localStorage.getItem('eduwritex_transactions') || '[]');
+            exportTransactionsData(transactions);
+          });
+      } catch (error) {
+        console.error('Error exporting transactions:', error);
+        alert('⚠️ Error exporting transactions');
+      }
+    }
+
+    function exportTransactionsData(transactions) {
+      if (transactions.length === 0) {
+        alert('No transactions to export');
+        return;
+      }
+
+      // Create CSV content
+      const headers = ['Invoice Number', 'Date', 'Customer Name', 'Customer Address', 'Service Type', 'Pages/Words', 'Cost Per Unit', 'Service Total', 'Additional Items Total', 'Grand Total', 'Account'];
+      const csvRows = [headers.join(',')];
+
+      transactions.forEach(t => {
+        const row = [
+          t.invoiceNumber,
+          t.date,
+          `"${t.customerName}"`,
+          `"${t.customerAddress || ''}"`,
+          `"${t.serviceType}"`,
+          t.pages,
+          t.costPerUnit,
+          t.serviceTotal,
+          t.additionalTotal,
+          t.grandTotal,
+          `"${t.account}"`
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      // Download CSV
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('hidden', '');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `EduWriteX_Transactions_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      alert('✅ Transactions exported successfully!');
+    }
+
+    function clearAllTransactions() {
+      if (confirm('Are you sure you want to delete all transaction data? This action cannot be undone.')) {
+        // Clear from server
+        fetch('/api/transactions', {
+          method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Server data cleared successfully');
+          }
+          // Also clear localStorage
+          localStorage.removeItem('eduwritex_transactions');
+          loadTransactions();
+          alert('✅ All transaction data has been cleared');
+        })
+        .catch(error => {
+          console.error('Error clearing server data:', error);
+          // Still clear localStorage
+          localStorage.removeItem('eduwritex_transactions');
+          loadTransactions();
+          alert('✅ Local data cleared (server may still have data)');
+        });
+      }
+    }
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadTransactions, 30000);
+  </script>
+</body>
+</html>
