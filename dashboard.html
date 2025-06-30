@@ -96,6 +96,7 @@
     <!-- Navigation -->
     <div class="text-center mb-4">
       <a href="index.html" class="btn btn-outline-primary">← Back to Bill Generator</a>
+      <button onclick="showManualEntryModal()" class="btn btn-success ms-2">➕ Add Manual Transaction</button>
       <button onclick="exportTransactions()" class="btn btn-export ms-2">📄 Export to CSV</button>
       <button onclick="clearAllTransactions()" class="btn btn-outline-danger ms-2">🗑️ Clear All Data</button>
     </div>
@@ -122,8 +123,8 @@
       </div>
       <div class="col-md-3 col-6">
         <div class="stats-card">
-          <h3 id="topService">-</h3>
-          <p>Top Service</p>
+          <h3 id="pendingPayments">0</h3>
+          <p>Pending Payments</p>
         </div>
       </div>
     </div>
@@ -140,7 +141,8 @@
               <th>Customer</th>
               <th>Service</th>
               <th>Amount</th>
-              <th>Status</th>
+              <th>Payment Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="transactionsBody">
@@ -155,6 +157,104 @@
         <h4>No Transactions Found</h4>
         <p>Start generating invoices to see your transaction data here.</p>
         <a href="index.html" class="btn btn-primary">Create First Invoice</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Entry Modal -->
+  <div class="modal fade" id="manualEntryModal" tabindex="-1" aria-labelledby="manualEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-primary" id="manualEntryModalLabel">📄 Add Manual Transaction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="manualEntryForm">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="manualInvoiceNumber" class="form-label">Invoice Number</label>
+                <input type="text" class="form-control" id="manualInvoiceNumber" placeholder="e.g., INV-001" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="manualDate" class="form-label">Date</label>
+                <input type="date" class="form-control" id="manualDate" required>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-8 mb-3">
+                <label for="manualCustomerName" class="form-label">Customer Name</label>
+                <input type="text" class="form-control" id="manualCustomerName" placeholder="Customer Name" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="manualServiceType" class="form-label">Service Type</label>
+                <select class="form-select" id="manualServiceType" required>
+                  <option value="">Select Service</option>
+                  <option value="Typing Service">Typing Service</option>
+                  <option value="Service Assignment">Service Assignment</option>
+                  <option value="Editing Service">Editing Service</option>
+                  <option value="Translation Service">Translation Service</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="manualCustomerAddress" class="form-label">Customer Address (Optional)</label>
+              <input type="text" class="form-control" id="manualCustomerAddress" placeholder="Customer Address">
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="manualPages" class="form-label">Pages/Words</label>
+                <input type="number" class="form-control" id="manualPages" placeholder="Number of Pages/Words" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="manualCostPerUnit" class="form-label">Cost per Unit (Rs.)</label>
+                <input type="number" step="0.01" class="form-control" id="manualCostPerUnit" placeholder="Cost per Page/Word" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="manualServiceTotal" class="form-label">Service Total (Rs.)</label>
+                <input type="number" step="0.01" class="form-control" id="manualServiceTotal" placeholder="Auto-calculated" readonly>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="manualAdditionalTotal" class="form-label">Additional Items Total (Rs.) - Optional</label>
+              <input type="number" step="0.01" class="form-control" id="manualAdditionalTotal" placeholder="0" value="0">
+              <small class="text-muted">Enter total amount of any additional items if applicable</small>
+            </div>
+            
+            <div class="mb-3">
+              <label for="manualGrandTotal" class="form-label">Grand Total (Rs.)</label>
+              <input type="number" step="0.01" class="form-control" id="manualGrandTotal" placeholder="Auto-calculated" readonly>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-8 mb-3">
+                <label for="manualAccount" class="form-label">Payment Account</label>
+                <select class="form-select" id="manualAccount" required>
+                  <option value="">Select Account</option>
+                  <option value="Acc NO: 013020753221 | D.G.Y Sulochana | Hatton National Bank - Galle">HNB - Yasindu | Acc NO: 013020753221 | D.G.Y Sulochana | Hatton National Bank - Galle</option>
+                  <option value="Acc NO: 5566067 | D.G.Y Sulochana | Bank Of Ceylon - Imaduwa">BOC - Yasindu | Acc NO: 5566067 | D.G.Y Sulochana | Bank Of Ceylon - Imaduwa</option>
+                  <option value="Acc NO: 1069 5277 5694 | G.A.S Thathsarani | Sampath Bank - Homagama">Sampath - Sugandhya | Acc NO: 1069 5277 5694 | G.A.S Thathsarani | Sampath Bank - Homagama</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="manualPaymentStatus" class="form-label">Payment Status</label>
+                <select class="form-select" id="manualPaymentStatus" required>
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveManualTransaction()">💾 Save Transaction</button>
+        </div>
       </div>
     </div>
   </div>
@@ -216,6 +316,7 @@
       const totalTransactions = transactions.length;
       const totalRevenue = transactions.reduce((sum, t) => sum + t.grandTotal, 0);
       const avgTransaction = totalRevenue / totalTransactions;
+      const pendingPayments = transactions.filter(t => t.paymentStatus === 'pending' || t.paymentStatus === 'overdue').length;
       
       // Find top service
       const serviceCounts = {};
@@ -227,7 +328,7 @@
       document.getElementById('totalTransactions').textContent = totalTransactions;
       document.getElementById('totalRevenue').textContent = `Rs. ${totalRevenue.toLocaleString()}`;
       document.getElementById('avgTransaction').textContent = `Rs. ${Math.round(avgTransaction).toLocaleString()}`;
-      document.getElementById('topService').textContent = topService.replace(' Service', '');
+      document.getElementById('pendingPayments').textContent = pendingPayments;
     }
 
     function displayTransactions(transactions) {
@@ -237,7 +338,15 @@
       // Sort by date (newest first)
       transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-      transactions.forEach(transaction => {
+      transactions.forEach((transaction, index) => {
+        // Default to 'paid' for old transactions that don't have paymentStatus
+        const paymentStatus = transaction.paymentStatus || 'paid';
+        const statusBadgeClass = {
+          'paid': 'bg-success',
+          'pending': 'bg-warning text-dark',
+          'overdue': 'bg-danger'
+        }[paymentStatus];
+
         const row = document.createElement('tr');
         row.innerHTML = `
           <td><span class="badge bg-primary">${transaction.invoiceNumber}</span></td>
@@ -251,7 +360,24 @@
             <br><small class="text-muted">${transaction.pages} pages/words</small>
           </td>
           <td><strong class="text-success">Rs. ${transaction.grandTotal.toLocaleString()}</strong></td>
-          <td><span class="badge bg-success">Completed</span></td>
+          <td>
+            <span class="badge ${statusBadgeClass}" id="status-${transaction.id || index}">
+              ${paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)}
+            </span>
+          </td>
+          <td>
+            <div class="btn-group btn-group-sm" role="group">
+              <button class="btn btn-outline-success btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'paid')" title="Mark as Paid">
+                ✓
+              </button>
+              <button class="btn btn-outline-warning btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'pending')" title="Mark as Pending">
+                ⏳
+              </button>
+              <button class="btn btn-outline-danger btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'overdue')" title="Mark as Overdue">
+                ⚠️
+              </button>
+            </div>
+          </td>
         `;
         tbody.appendChild(row);
       });
@@ -265,7 +391,7 @@
       document.getElementById('totalTransactions').textContent = '0';
       document.getElementById('totalRevenue').textContent = 'Rs. 0';
       document.getElementById('avgTransaction').textContent = 'Rs. 0';
-      document.getElementById('topService').textContent = '-';
+      document.getElementById('pendingPayments').textContent = '0';
     }
 
     function hideEmptyState() {
@@ -369,6 +495,199 @@
 
     // Auto-refresh every 30 seconds
     setInterval(loadTransactions, 30000);
+
+    // Manual Entry Functions
+    function showManualEntryModal() {
+      // Reset form
+      document.getElementById('manualEntryForm').reset();
+      // Set today's date as default
+      document.getElementById('manualDate').valueAsDate = new Date();
+      // Show modal
+      const modal = new bootstrap.Modal(document.getElementById('manualEntryModal'));
+      modal.show();
+    }
+
+    // Auto-calculate totals when values change
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTransactions();
+      
+      // Add event listeners for auto-calculation
+      const pagesField = document.getElementById('manualPages');
+      const costField = document.getElementById('manualCostPerUnit');
+      const additionalField = document.getElementById('manualAdditionalTotal');
+      
+      function calculateTotals() {
+        const pages = parseFloat(pagesField.value) || 0;
+        const costPerUnit = parseFloat(costField.value) || 0;
+        const additionalTotal = parseFloat(additionalField.value) || 0;
+        
+        const serviceTotal = pages * costPerUnit;
+        const grandTotal = serviceTotal + additionalTotal;
+        
+        document.getElementById('manualServiceTotal').value = serviceTotal.toFixed(2);
+        document.getElementById('manualGrandTotal').value = grandTotal.toFixed(2);
+      }
+      
+      pagesField.addEventListener('input', calculateTotals);
+      costField.addEventListener('input', calculateTotals);
+      additionalField.addEventListener('input', calculateTotals);
+    });
+
+    function saveManualTransaction() {
+      const form = document.getElementById('manualEntryForm');
+      
+      // Validate form
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      
+      // Get form data
+      const transaction = {
+        invoiceNumber: document.getElementById('manualInvoiceNumber').value,
+        date: new Date(document.getElementById('manualDate').value).toLocaleDateString(),
+        customerName: document.getElementById('manualCustomerName').value,
+        customerAddress: document.getElementById('manualCustomerAddress').value,
+        serviceType: document.getElementById('manualServiceType').value,
+        pages: parseInt(document.getElementById('manualPages').value),
+        costPerUnit: parseFloat(document.getElementById('manualCostPerUnit').value),
+        serviceTotal: parseFloat(document.getElementById('manualServiceTotal').value),
+        additionalItems: [], // Empty array for manual entries
+        additionalTotal: parseFloat(document.getElementById('manualAdditionalTotal').value) || 0,
+        grandTotal: parseFloat(document.getElementById('manualGrandTotal').value),
+        account: document.getElementById('manualAccount').value,
+        paymentStatus: document.getElementById('manualPaymentStatus').value
+      };
+      
+      // Save to server
+      fetch('/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transaction })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Also save to localStorage as backup
+          let localTransactions = JSON.parse(localStorage.getItem('eduwritex_transactions') || '[]');
+          localTransactions.push({
+            ...transaction,
+            timestamp: new Date().toISOString()
+          });
+          localStorage.setItem('eduwritex_transactions', JSON.stringify(localTransactions));
+          
+          // Close modal and refresh data
+          const modal = bootstrap.Modal.getInstance(document.getElementById('manualEntryModal'));
+          modal.hide();
+          
+          // Refresh the dashboard
+          loadTransactions();
+          
+          alert('✅ Manual transaction added successfully!');
+        } else {
+          throw new Error(data.error || 'Failed to save transaction');
+        }
+      })
+      .catch(error => {
+        console.error('Error saving to server:', error);
+        
+        // Fallback to localStorage
+        let localTransactions = JSON.parse(localStorage.getItem('eduwritex_transactions') || '[]');
+        localTransactions.push({
+          ...transaction,
+          timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('eduwritex_transactions', JSON.stringify(localTransactions));
+        
+        // Close modal and refresh data
+        const modal = bootstrap.Modal.getInstance(document.getElementById('manualEntryModal'));
+        modal.hide();
+        
+        loadTransactions();
+        alert('✅ Transaction saved locally (server connection failed)');
+      });
+    }
+
+    // Update payment status function
+    function updatePaymentStatus(transactionId, newStatus) {
+      try {
+        // Get current transactions
+        fetch('/api/transactions')
+          .then(response => response.json())
+          .then(data => {
+            let transactions = [];
+            if (data.success && data.data.length > 0) {
+              transactions = data.data;
+            } else {
+              transactions = JSON.parse(localStorage.getItem('eduwritex_transactions') || '[]');
+            }
+            
+            // Find and update the transaction
+            const transactionIndex = transactions.findIndex((t, index) => (t.id || index.toString()) === transactionId);
+            if (transactionIndex !== -1) {
+              transactions[transactionIndex].paymentStatus = newStatus;
+              
+              // Save back to server (you would need to implement an UPDATE endpoint)
+              // For now, we'll update localStorage
+              localStorage.setItem('eduwritex_transactions', JSON.stringify(transactions));
+              
+              // Update the UI immediately
+              const statusElement = document.getElementById(`status-${transactionId}`);
+              const statusBadgeClass = {
+                'paid': 'bg-success',
+                'pending': 'bg-warning text-dark',
+                'overdue': 'bg-danger'
+              }[newStatus];
+              
+              statusElement.className = `badge ${statusBadgeClass}`;
+              statusElement.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+              
+              // Refresh statistics
+              displayStatistics(transactions);
+              
+              // Show success message
+              const statusMessages = {
+                'paid': '✅ Payment marked as paid',
+                'pending': '⏳ Payment marked as pending', 
+                'overdue': '⚠️ Payment marked as overdue'
+              };
+              
+              // Show a small notification instead of alert
+              showNotification(statusMessages[newStatus]);
+            }
+          })
+          .catch(error => {
+            console.error('Error updating payment status:', error);
+            alert('⚠️ Error updating payment status');
+          });
+      } catch (error) {
+        console.error('Error updating payment status:', error);
+        alert('⚠️ Error updating payment status');
+      }
+    }
+
+    // Show notification function
+    function showNotification(message) {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = 'alert alert-success position-fixed top-0 end-0 m-3';
+      notification.style.zIndex = '9999';
+      notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.remove();
+        }
+      }, 3000);
+    }
   </script>
 </body>
 </html>
