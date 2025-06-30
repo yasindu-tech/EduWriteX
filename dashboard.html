@@ -71,6 +71,38 @@
       opacity: 0.5;
       margin-bottom: 20px;
     }
+    .mobile-transaction-card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid #1a73e8;
+    }
+    .mobile-transaction-card .customer-name {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #1a73e8;
+      margin-bottom: 8px;
+    }
+    .mobile-transaction-card .amount {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #28a745;
+      margin-bottom: 8px;
+    }
+    .mobile-transaction-card .status-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .mobile-view {
+      display: none;
+    }
+    .desktop-view {
+      display: block;
+    }
     @media (max-width: 768px) {
       .dashboard-container {
         padding: 10px;
@@ -78,8 +110,18 @@
       .stats-card h3 {
         font-size: 2rem;
       }
-      .table-responsive {
-        font-size: 0.9rem;
+      .mobile-view {
+        display: block;
+      }
+      .desktop-view {
+        display: none;
+      }
+      .stats-card {
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+      .stats-card h3 {
+        font-size: 1.8rem;
       }
     }
   </style>
@@ -129,8 +171,8 @@
       </div>
     </div>
 
-    <!-- Transactions Table -->
-    <div class="transaction-table">
+    <!-- Transactions Table - Desktop View -->
+    <div class="transaction-table desktop-view">
       <h3 class="text-primary mb-3">Recent Transactions</h3>
       <div class="table-responsive">
         <table class="table table-hover" id="transactionsTable">
@@ -157,6 +199,40 @@
         <h4>No Transactions Found</h4>
         <p>Start generating invoices to see your transaction data here.</p>
         <a href="index.html" class="btn btn-primary">Create First Invoice</a>
+      </div>
+    </div>
+
+    <!-- Transactions Cards - Mobile View -->
+    <div class="mobile-view">
+      <h3 class="text-primary mb-3">Recent Transactions</h3>
+      <div id="mobileTransactionsContainer">
+        <!-- Mobile transaction cards will be populated here -->
+      </div>
+      
+      <!-- Empty State Mobile -->
+      <div id="emptyStateMobile" class="empty-state" style="display: none;">
+        <div class="mb-3">📊</div>
+        <h4>No Transactions Found</h4>
+        <p>Start generating invoices to see your transaction data here.</p>
+        <a href="index.html" class="btn btn-primary">Create First Invoice</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transaction Details Modal for Mobile -->
+  <div class="modal fade" id="transactionDetailsModal" tabindex="-1" aria-labelledby="transactionDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-primary" id="transactionDetailsModalLabel">📋 Transaction Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="transactionDetailsBody">
+          <!-- Transaction details will be populated here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
       </div>
     </div>
   </div>
@@ -307,9 +383,13 @@
         return;
       }
 
+      // Store transactions globally for mobile details view
+      allTransactions = transactions;
+
       hideEmptyState();
       displayStatistics(transactions);
       displayTransactions(transactions);
+      displayMobileTransactions(transactions);
     }
 
     function displayStatistics(transactions) {
@@ -383,9 +463,115 @@
       });
     }
 
+    function displayMobileTransactions(transactions) {
+      const container = document.getElementById('mobileTransactionsContainer');
+      container.innerHTML = '';
+
+      // Sort by date (newest first)
+      transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      transactions.forEach((transaction, index) => {
+        // Default to 'paid' for old transactions that don't have paymentStatus
+        const paymentStatus = transaction.paymentStatus || 'paid';
+        const statusBadgeClass = {
+          'paid': 'bg-success',
+          'pending': 'bg-warning text-dark',
+          'overdue': 'bg-danger'
+        }[paymentStatus];
+
+        const card = document.createElement('div');
+        card.className = 'mobile-transaction-card';
+        card.innerHTML = `
+          <div class="customer-name">${transaction.customerName}</div>
+          <div class="amount">Rs. ${transaction.grandTotal.toLocaleString()}</div>
+          <div class="status-actions">
+            <span class="badge ${statusBadgeClass}" id="mobile-status-${transaction.id || index}">
+              ${paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)}
+            </span>
+            <button class="btn btn-outline-primary btn-sm" onclick="showTransactionDetails(${index})">
+              View Details
+            </button>
+          </div>
+          <div class="mt-2">
+            <div class="btn-group btn-group-sm w-100" role="group">
+              <button class="btn btn-outline-success btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'paid')" title="Mark as Paid">
+                ✓ Paid
+              </button>
+              <button class="btn btn-outline-warning btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'pending')" title="Mark as Pending">
+                ⏳ Pending
+              </button>
+              <button class="btn btn-outline-danger btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'overdue')" title="Mark as Overdue">
+                ⚠️ Overdue
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // Global variable to store transactions for mobile details view
+    let allTransactions = [];
+
+    function showTransactionDetails(index) {
+      const transaction = allTransactions[index];
+      if (!transaction) return;
+
+      const detailsHtml = `
+        <div class="row">
+          <div class="col-12 mb-3">
+            <strong>Invoice Number:</strong><br>
+            <span class="badge bg-primary">${transaction.invoiceNumber}</span>
+          </div>
+          <div class="col-6 mb-3">
+            <strong>Date:</strong><br>
+            ${transaction.date}
+          </div>
+          <div class="col-6 mb-3">
+            <strong>Service:</strong><br>
+            <span class="badge bg-secondary">${transaction.serviceType}</span>
+          </div>
+          <div class="col-12 mb-3">
+            <strong>Customer:</strong><br>
+            ${transaction.customerName}<br>
+            ${transaction.customerAddress ? `<small class="text-muted">${transaction.customerAddress}</small>` : ''}
+          </div>
+          <div class="col-6 mb-3">
+            <strong>Pages/Words:</strong><br>
+            ${transaction.pages}
+          </div>
+          <div class="col-6 mb-3">
+            <strong>Cost per Unit:</strong><br>
+            Rs. ${transaction.costPerUnit}
+          </div>
+          <div class="col-6 mb-3">
+            <strong>Service Total:</strong><br>
+            Rs. ${transaction.serviceTotal.toLocaleString()}
+          </div>
+          <div class="col-6 mb-3">
+            <strong>Additional Total:</strong><br>
+            Rs. ${transaction.additionalTotal.toLocaleString()}
+          </div>
+          <div class="col-12 mb-3">
+            <strong>Grand Total:</strong><br>
+            <span class="h5 text-success">Rs. ${transaction.grandTotal.toLocaleString()}</span>
+          </div>
+          <div class="col-12 mb-3">
+            <strong>Account:</strong><br>
+            <small>${transaction.account}</small>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('transactionDetailsBody').innerHTML = detailsHtml;
+      const modal = new bootstrap.Modal(document.getElementById('transactionDetailsModal'));
+      modal.show();
+    }
+
     function showEmptyState() {
       document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('emptyStateMobile').style.display = 'block';
       document.getElementById('transactionsTable').style.display = 'none';
+      document.getElementById('mobileTransactionsContainer').innerHTML = '';
       
       // Reset statistics
       document.getElementById('totalTransactions').textContent = '0';
@@ -396,6 +582,7 @@
 
     function hideEmptyState() {
       document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('emptyStateMobile').style.display = 'none';
       document.getElementById('transactionsTable').style.display = 'table';
     }
 
@@ -635,14 +822,25 @@
               
               // Update the UI immediately
               const statusElement = document.getElementById(`status-${transactionId}`);
+              const mobileStatusElement = document.getElementById(`mobile-status-${transactionId}`);
               const statusBadgeClass = {
                 'paid': 'bg-success',
                 'pending': 'bg-warning text-dark',
                 'overdue': 'bg-danger'
               }[newStatus];
               
-              statusElement.className = `badge ${statusBadgeClass}`;
-              statusElement.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+              if (statusElement) {
+                statusElement.className = `badge ${statusBadgeClass}`;
+                statusElement.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+              }
+              
+              if (mobileStatusElement) {
+                mobileStatusElement.className = `badge ${statusBadgeClass}`;
+                mobileStatusElement.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+              }
+              
+              // Update the global transactions array
+              allTransactions = transactions;
               
               // Refresh statistics
               displayStatistics(transactions);
