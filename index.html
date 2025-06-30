@@ -135,12 +135,20 @@
         <div class="mb-3">
           <input type="text" id="address" class="form-control" placeholder="Customer Address (optional)" />
         </div>
+        <div class="mb-3">
+          <select id="serviceType" class="form-select">
+            <option value="Typing Service">Typing Service</option>
+            <option value="Service Assignment">Service Assignment</option>
+            <option value="Converting and Spell Checking Service">Converting and Spell Checking Service</option>
+            <option value="Translation Service">Translation Service</option>
+          </select>
+        </div>
         <div class="row g-2 mb-3">
           <div class="col-6">
-            <input type="number" id="pages" class="form-control" placeholder="Number of Pages" />
+            <input type="number" id="pages" class="form-control" placeholder="Number of Pages/Words" />
           </div>
           <div class="col-6">
-            <input type="number" id="typeCost" class="form-control" placeholder="Typing Cost per Page (Rs.)" />
+            <input type="number" id="typeCost" class="form-control" placeholder="Cost per Pages/Words (Rs.)" />
           </div>
         </div>
         <div class="mb-3">
@@ -210,6 +218,7 @@
     function generatePDF() {
       const name = document.getElementById('customer').value;
       const addr = document.getElementById('address').value;
+      const serviceType = document.getElementById('serviceType').value;
       const pages = +document.getElementById('pages').value;
       const typeCost = +document.getElementById('typeCost').value;
       const account = document.getElementById('account').value;
@@ -227,10 +236,10 @@
       const invoiceNumber = 'INV-' + Date.now();
 
       // Generate PDF
-      generatePDFFile(name, addr, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber);
+      generatePDFFile(name, addr, serviceType, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber);
     }
 
-    function generatePDFFile(name, addr, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber) {
+    function generatePDFFile(name, addr, serviceType, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
@@ -264,15 +273,15 @@
         doc.setFont("helvetica", "bold");
         doc.text('Service Details:', 20, 120);
         doc.text('Description', 20, 130);
-        doc.text('Pages', 100, 130);
-        doc.text('Rate/Page', 130, 130);
+        doc.text('Pages/Words', 95, 130);
+        doc.text('Rate/Unit', 130, 130);
         doc.text('Amount', 170, 130);
 
         doc.line(20, 135, 190, 135);
 
-        // Main typing service
+        // Main service
         doc.setFont("helvetica", "normal");
-        doc.text('Typing Service', 20, 145);
+        doc.text(serviceType, 20, 145);
         doc.text(pages.toString(), 100, 145);
         doc.text(`Rs. ${typeCost}`, 130, 145);
         doc.text(`Rs. ${total}`, 170, 145);
@@ -298,7 +307,7 @@
         // Subtotals
         if (additionalItems.length > 0) {
           doc.setFont("helvetica", "normal");
-          doc.text(`Typing Services: Rs. ${total}`, 130, currentY);
+          doc.text(`${serviceType}: Rs. ${total}`, 130, currentY);
           currentY += 10;
           doc.text(`Additional Items: Rs. ${additionalTotal}`, 130, currentY);
           currentY += 10;
