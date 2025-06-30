@@ -4,12 +4,14 @@
   "description": "EduWriteX Bill Generator with Transaction Storage",
   "main": "index.html",
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "netlify dev",
     "build": "echo 'No build step required'",
-    "start": "vercel dev"
+    "start": "netlify dev"
   },
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
   "engines": {
     "node": ">=18.0.0"
   }
