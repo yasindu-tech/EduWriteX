@@ -97,6 +97,10 @@
       align-items: center;
       margin-top: 10px;
     }
+    .mobile-view .btn-group-sm .btn {
+      margin: 2px;
+      padding: 8px 12px;
+    }
     .mobile-view {
       display: none;
     }
@@ -493,14 +497,14 @@
             </button>
           </div>
           <div class="mt-2">
-            <div class="btn-group btn-group-sm w-100" role="group">
-              <button class="btn btn-outline-success btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'paid')" title="Mark as Paid">
+            <div class="d-flex gap-2" role="group">
+              <button class="btn btn-outline-success btn-sm flex-fill" onclick="updatePaymentStatus('${transaction.id || index}', 'paid')" title="Mark as Paid">
                 ✓ Paid
               </button>
-              <button class="btn btn-outline-warning btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'pending')" title="Mark as Pending">
+              <button class="btn btn-outline-warning btn-sm flex-fill" onclick="updatePaymentStatus('${transaction.id || index}', 'pending')" title="Mark as Pending">
                 ⏳ Pending
               </button>
-              <button class="btn btn-outline-danger btn-sm" onclick="updatePaymentStatus('${transaction.id || index}', 'overdue')" title="Mark as Overdue">
+              <button class="btn btn-outline-danger btn-sm flex-fill" onclick="updatePaymentStatus('${transaction.id || index}', 'overdue')" title="Mark as Overdue">
                 ⚠️ Overdue
               </button>
             </div>
