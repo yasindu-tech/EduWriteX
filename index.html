@@ -138,21 +138,31 @@
         <div class="mb-3">
           <input type="text" id="address" class="form-control" placeholder="Customer Address (optional)" />
         </div>
-        <div class="mb-3">
-          <select id="serviceType" class="form-select">
-            <option value="Typing Service">Typing Service</option>
-            <option value="Service Assignment">Service Assignment</option>
-            <option value="Editing Service">Editing Service</option>
-            <option value="Translation Service">Translation Service</option>
-          </select>
-        </div>
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <input type="number" id="pages" class="form-control" placeholder="Number of Pages/Words" />
+        <div class="work-items-section mb-3" id="workItemsSection">
+          <h3 class="h6 text-primary mb-3">Work Items</h3>
+          <div id="workItemsContainer">
+            <div class="work-item-row mb-3 p-3 border rounded bg-light">
+              <div class="mb-3">
+                <select class="form-select service-type">
+                  <option value="Typing Service">Typing Service</option>
+                  <option value="Service Assignment">Service Assignment</option>
+                  <option value="Editing Service">Editing Service</option>
+                  <option value="Translation Service">Translation Service</option>
+                </select>
+              </div>
+              <div class="row g-2">
+                <div class="col-6">
+                  <input type="number" class="form-control pages" placeholder="Number of Pages/Words" />
+                </div>
+                <div class="col-6">
+                  <input type="number" class="form-control type-cost" placeholder="Cost per Pages/Words (Rs.)" />
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="col-6">
-            <input type="number" id="typeCost" class="form-control" placeholder="Cost per Pages/Words (Rs.)" />
-          </div>
+          <button type="button" class="btn btn-primary add-work-btn" onclick="addWorkItem()">
+            <i class="bi bi-plus-circle"></i> Add Another Work Item
+          </button>
         </div>
         <div class="mb-3">
           <select id="account" class="form-select">
@@ -209,6 +219,56 @@
       container.appendChild(newRow);
     }
 
+    function addWorkItem() {
+      const container = document.getElementById('workItemsContainer');
+      const newRow = document.createElement('div');
+      newRow.className = 'work-item-row mb-3 p-3 border rounded bg-light';
+      newRow.innerHTML = `
+        <div class="mb-3">
+          <select class="form-select service-type">
+            <option value="Typing Service">Typing Service</option>
+            <option value="Service Assignment">Service Assignment</option>
+            <option value="Editing Service">Editing Service</option>
+            <option value="Translation Service">Translation Service</option>
+          </select>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <input type="number" class="form-control pages" placeholder="Number of Pages/Words" />
+          </div>
+          <div class="col-6">
+            <input type="number" class="form-control type-cost" placeholder="Cost per Pages/Words (Rs.)" />
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-work-item" onclick="this.closest('.work-item-row').remove()">
+          Remove
+        </button>
+      `;
+      container.appendChild(newRow);
+    }
+
+    function getWorkItems() {
+      const items = [];
+      const workRows = document.querySelectorAll('.work-item-row');
+      
+      workRows.forEach(row => {
+        const serviceType = row.querySelector('.service-type').value;
+        const pages = parseInt(row.querySelector('.pages').value) || 0;
+        const typeCost = parseFloat(row.querySelector('.type-cost').value) || 0;
+        
+        if (pages > 0 && typeCost > 0) {
+          items.push({
+            serviceType,
+            pages,
+            typeCost,
+            total: pages * typeCost
+          });
+        }
+      });
+      
+      return items;
+    }
+
     function getAdditionalItems() {
       const items = [];
       const itemRows = document.querySelectorAll('.item-row');
@@ -229,21 +289,19 @@
     function generatePDF() {
       const name = document.getElementById('customer').value;
       const addr = document.getElementById('address').value;
-      const serviceType = document.getElementById('serviceType').value;
-      const pages = +document.getElementById('pages').value;
-      const typeCost = +document.getElementById('typeCost').value;
+      const workItems = getWorkItems();
       const account = document.getElementById('account').value;
       const saveTransaction = document.getElementById('saveTransaction').checked;
 
-      if (!name || !pages || !typeCost) {
-        alert("Please fill all required fields");
+      if (!name || workItems.length === 0) {
+        alert("Please fill customer name and at least one work item");
         return;
       }
 
-      const total = pages * typeCost;
+      const servicesTotal = workItems.reduce((sum, item) => sum + item.total, 0);
       const additionalItems = getAdditionalItems();
       const additionalTotal = additionalItems.reduce((sum, item) => sum + item.cost, 0);
-      const grandTotal = total + additionalTotal;
+      const grandTotal = servicesTotal + additionalTotal;
       const currentDate = new Date().toLocaleDateString();
       const invoiceNumber = 'INV-' + Date.now();
 
@@ -254,10 +312,8 @@
           date: currentDate,
           customerName: name,
           customerAddress: addr,
-          serviceType,
-          pages,
-          costPerUnit: typeCost,
-          serviceTotal: total,
+          workItems,
+          servicesTotal,
           additionalItems,
           additionalTotal,
           grandTotal,
@@ -267,7 +323,7 @@
       }
 
       // Generate PDF
-      generatePDFFile(name, addr, serviceType, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber);
+      generatePDFFile(name, addr, workItems, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber);
     }
 
     function saveTransactionToStorage(transaction) {
@@ -316,16 +372,16 @@
       }
     }
 
-    function generatePDFFile(name, addr, serviceType, pages, typeCost, total, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber) {
+    function generatePDFFile(name, addr, workItems, additionalItems, additionalTotal, grandTotal, account, currentDate, invoiceNumber) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
       // Load image and add to PDF
       const logoImg = new Image();
-      logoImg.src = 'logo.png'; // Using logo.png as shown in your HTML
+      logoImg.src = 'logo.png';
 
       logoImg.onload = function () {
-        // Add Logo (x, y, width, height)
+        // Add Logo
         doc.addImage(logoImg, 'PNG', 80, 10, 50, 20);
 
         // Header text
@@ -356,44 +412,59 @@
 
         doc.line(20, 135, 190, 135);
 
-        // Main service
+        // Work items
+        let currentY = 145;
         doc.setFont("helvetica", "normal");
-        doc.text(serviceType, 20, 145);
-        doc.text(pages.toString(), 100, 145);
-        doc.text(`Rs. ${typeCost}`, 130, 145);
-        doc.text(`Rs. ${total}`, 170, 145);
+        
+        workItems.forEach((item, index) => {
+          doc.text(item.serviceType, 20, currentY);
+          doc.text(item.pages.toString(), 100, currentY);
+          doc.text(`Rs. ${item.typeCost}`, 130, currentY);
+          doc.text(`Rs. ${item.total}`, 170, currentY);
+          currentY += 10;
+        });
 
-        let currentY = 155;
+        // Calculate services total
+        const servicesTotal = workItems.reduce((sum, item) => sum + item.total, 0);
+        
+        // Add line after services
+        currentY += 5;
+        doc.line(20, currentY, 190, currentY);
+        currentY += 15;
+
+        // Services subtotal
+        doc.setFont("helvetica", "bold");
+        doc.text(`Services Total: Rs. ${servicesTotal}`, 170, currentY, { align: 'right' });
+        currentY += 15;
 
         // Additional items
         if (additionalItems.length > 0) {
-          additionalItems.forEach((item, index) => {
+          doc.setFont("helvetica", "bold");
+          doc.text('Additional Items:', 20, currentY);
+          currentY += 10;
+          
+          doc.setFont("helvetica", "normal");
+          additionalItems.forEach((item) => {
             const itemText = item.description ? `${item.name} - ${item.description}` : item.name;
             doc.text(itemText, 20, currentY);
-            doc.text('1', 100, currentY);
-            doc.text(`Rs. ${item.cost}`, 130, currentY);
-            doc.text(`Rs. ${item.cost}`, 170, currentY);
+            doc.text(`Rs. ${item.cost}`, 170, currentY, { align: 'right' });
             currentY += 10;
           });
-        }
 
-        // Subtotal line
-        doc.line(20, currentY, 190, currentY);
-        currentY += 10;
-
-        // Subtotals
-        if (additionalItems.length > 0) {
-          doc.setFont("helvetica", "normal");
-          doc.text(`${serviceType}: Rs. ${total}`, 130, currentY);
-          currentY += 10;
-          doc.text(`Additional Items: Rs. ${additionalTotal}`, 130, currentY);
-          currentY += 10;
+          // Add line after additional items
+          doc.line(20, currentY, 190, currentY);
+          currentY += 15;
+          
+          // Additional items total
+          doc.setFont("helvetica", "bold");
+          doc.text(`Additional Items Total: Rs. ${additionalTotal}`, 170, currentY, { align: 'right' });
+          currentY += 15;
         }
 
         // Grand Total
-        doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text(`Total: Rs. ${grandTotal}`, 170, currentY + 10, { align: 'right' });
+        doc.setFont("helvetica", "bold");
+        doc.text(`Grand Total: Rs. ${grandTotal}`, 170, currentY, { align: 'right' });
 
         // Payment details
         doc.setFontSize(12);
