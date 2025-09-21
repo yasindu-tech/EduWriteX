@@ -74,26 +74,40 @@
         <label for="bankBranch">Bank Branch <span class="text-muted">(optional)</span></label>
         <input type="text" id="bankBranch" class="form-control" />
       </div>
-      <div class="mb-3">
-        <label for="serviceType">Service Type</label>
-        <select id="serviceType" class="form-select" required>
-          <option value="Typing Service">Typing Service</option>
-          <option value="Service Assignment">Service Assignment</option>
-          <option value="Assignment Service">Assignment Service</option>
-          <option value="Editing Service">Editing Service</option>
-          <option value="Translation Service">Translation Service</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
-      <div class="row g-2 mb-3">
-        <div class="col-6">
-          <label for="pages">Number of Pages/Words</label>
-          <input type="number" id="pages" class="form-control" min="1" required />
+      <div class="work-items-section mb-3" id="workItemsSection">
+        <h5 class="text-primary mb-3">Work Items</h5>
+        <div id="workItemsContainer">
+          <div class="work-item-row mb-3 p-3 border rounded bg-light">
+            <div class="mb-3">
+              <label for="orderId">Order ID</label>
+              <input type="text" class="form-control order-id" placeholder="#001" value="#001" required />
+            </div>
+            <div class="mb-3">
+              <label for="serviceType">Service Type</label>
+              <select class="form-select service-type" required>
+                <option value="Typing Service">Typing Service</option>
+                <option value="Service Assignment">Service Assignment</option>
+                <option value="Assignment Service">Assignment Service</option>
+                <option value="Editing Service">Editing Service</option>
+                <option value="Translation Service">Translation Service</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label for="pages">Number of Pages/Words</label>
+                <input type="number" class="form-control pages" min="1" required />
+              </div>
+              <div class="col-6">
+                <label for="pricePerUnit">Price per Page/Word</label>
+                <input type="number" class="form-control price-per-unit" min="0" required />
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="col-6">
-          <label for="pricePerUnit">Price per Page/Word</label>
-          <input type="number" id="pricePerUnit" class="form-control" min="0" required />
-        </div>
+        <button type="button" class="btn btn-primary add-work-btn" onclick="addWorkItem()">
+          + Add Another Work Item
+        </button>
       </div>
       <div class="mb-3">
         <label for="advance">Advance Amount <span class="text-muted">(if any)</span></label>
@@ -109,13 +123,84 @@
     <div id="resultBox" class="result-box" style="display:none;"></div>
   </div>
   <script>
+    function addWorkItem() {
+      const container = document.getElementById('workItemsContainer');
+      const currentItems = container.querySelectorAll('.work-item-row').length;
+      const nextOrderId = `#${String(currentItems + 1).padStart(3, '0')}`;
+      
+      const newRow = document.createElement('div');
+      newRow.className = 'work-item-row mb-3 p-3 border rounded bg-light';
+      newRow.innerHTML = `
+        <div class="mb-3">
+          <label>Order ID</label>
+          <input type="text" class="form-control order-id" placeholder="${nextOrderId}" value="${nextOrderId}" required />
+        </div>
+        <div class="mb-3">
+          <label>Service Type</label>
+          <select class="form-select service-type" required>
+            <option value="Typing Service">Typing Service</option>
+            <option value="Service Assignment">Service Assignment</option>
+            <option value="Assignment Service">Assignment Service</option>
+            <option value="Editing Service">Editing Service</option>
+            <option value="Translation Service">Translation Service</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label>Number of Pages/Words</label>
+            <input type="number" class="form-control pages" min="1" required />
+          </div>
+          <div class="col-6">
+            <label>Price per Page/Word</label>
+            <input type="number" class="form-control price-per-unit" min="0" required />
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline-danger btn-sm mt-2" onclick="this.closest('.work-item-row').remove()">
+          Remove Work Item
+        </button>
+      `;
+      container.appendChild(newRow);
+    }
+
+    function getWorkItems() {
+      const items = [];
+      const workRows = document.querySelectorAll('.work-item-row');
+      
+      workRows.forEach(row => {
+        const orderId = row.querySelector('.order-id').value;
+        const serviceType = row.querySelector('.service-type').value;
+        const pages = parseInt(row.querySelector('.pages').value) || 0;
+        const pricePerUnit = parseFloat(row.querySelector('.price-per-unit').value) || 0;
+        
+        if (orderId && pages > 0 && pricePerUnit > 0) {
+          items.push({
+            orderId,
+            serviceType,
+            pages,
+            pricePerUnit,
+            total: pages * pricePerUnit
+          });
+        }
+      });
+      
+      return items;
+    }
+
     function calculateBill() {
-      const pages = +document.getElementById('pages').value;
-      const pricePerUnit = +document.getElementById('pricePerUnit').value;
+      const workItems = getWorkItems();
       const advance = +document.getElementById('advance').value;
-      const total = pages * pricePerUnit;
+      
+      if (workItems.length === 0) {
+        alert('Please add at least one work item');
+        return;
+      }
+      
+      const total = workItems.reduce((sum, item) => sum + item.total, 0);
       const remaining = total - advance;
+      
       let html = `<strong>Total Payment:</strong> Rs. ${total.toFixed(2)}<br/>`;
+      html += `<strong>Work Items:</strong> ${workItems.length}<br/>`;
       if (advance > 0) {
         html += `<strong>Advance Paid:</strong> Rs. ${advance.toFixed(2)}<br/>`;
         html += `<strong>Remaining Amount:</strong> Rs. ${remaining.toFixed(2)}`;
@@ -134,20 +219,24 @@
         alert('❌ PDF export failed: jsPDF library not loaded.');
         return;
       }
+      
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       const employeeName = document.getElementById('employeeName').value;
       const bankAcc = document.getElementById('bankAcc').value;
       const bankName = document.getElementById('bankName').value;
       const bankBranch = document.getElementById('bankBranch').value;
-      const serviceType = document.getElementById('serviceType').value;
-      const pages = +document.getElementById('pages').value;
-      const pricePerUnit = +document.getElementById('pricePerUnit').value;
+      const workItems = getWorkItems();
       const advance = +document.getElementById('advance').value;
-      const total = pages * pricePerUnit;
+      const total = workItems.reduce((sum, item) => sum + item.total, 0);
       const remaining = total - advance;
       const currentDate = new Date().toLocaleDateString();
       const billType = type === 'advance' ? 'Advance Payment Bill' : 'Final Payment Bill';
+
+      if (workItems.length === 0) {
+        alert('❌ Please add at least one work item');
+        return;
+      }
 
       if (type === 'advance' && advance <= 0) {
         alert('❌ Please enter a valid advance amount to export an advance bill.');
@@ -185,49 +274,62 @@
         doc.setFont('helvetica', 'bold');
         doc.text('Service Details:', 20, y);
         doc.setFont('helvetica', 'normal');
-        doc.text('Description', 20, y+10);
+        doc.text('Order ID', 20, y+10);
+        doc.text('Description', 55, y+10);
         doc.text('Pages/Words', 95, y+10);
         doc.text('Rate/Unit', 130, y+10);
         doc.text('Amount', 170, y+10);
         doc.line(20, y+13, 190, y+13);
 
-        // Service row
+        // Work items
+        let currentY = y+22;
         doc.setFont('helvetica', 'normal');
-        doc.text(serviceType, 20, y+22);
-        doc.text(pages.toString(), 100, y+22);
-        doc.text(`Rs. ${pricePerUnit.toFixed(2)}`, 130, y+22);
-        doc.text(`Rs. ${total.toFixed(2)}`, 170, y+22);
+        
+        workItems.forEach((item) => {
+          doc.text(item.orderId, 20, currentY);
+          doc.text(item.serviceType, 55, currentY);
+          doc.text(item.pages.toString(), 100, currentY);
+          doc.text(`Rs. ${item.pricePerUnit.toFixed(2)}`, 130, currentY);
+          doc.text(`Rs. ${item.total.toFixed(2)}`, 170, currentY);
+          currentY += 10;
+        });
 
         // Subtotal line
-        doc.line(20, y+27, 190, y+27);
+        doc.line(20, currentY, 190, currentY);
+        currentY += 10;
+
+        // Total
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Services Total: Rs. ${total.toFixed(2)}`, 170, currentY, { align: 'right' });
+        currentY += 15;
 
         // Advance/Final Details
-        let detailsY = y+37;
         if (type === 'advance') {
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(255, 140, 0);
-          doc.text(`Advance Paid: Rs. ${advance.toFixed(2)}`, 20, detailsY);
+          doc.text(`Advance Paid: Rs. ${advance.toFixed(2)}`, 20, currentY);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(0,0,0);
-          doc.text('This is an advance payment bill. Remaining amount will be shown in the final bill.', 20, detailsY+10);
+          doc.text('This is an advance payment bill. Remaining amount will be shown in the final bill.', 20, currentY+10);
         } else {
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(34, 197, 94);
-          doc.text(`Advance Paid: Rs. ${advance.toFixed(2)}`, 20, detailsY);
-          doc.text(`Remaining Amount: Rs. ${remaining.toFixed(2)}`, 20, detailsY+10);
+          doc.text(`Advance Paid: Rs. ${advance.toFixed(2)}`, 20, currentY);
+          doc.text(`Remaining Amount: Rs. ${remaining.toFixed(2)}`, 20, currentY+10);
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(0,0,0);
-          doc.text('This is the final payment bill after deducting advance.', 20, detailsY+20);
+          doc.text('This is the final payment bill after deducting advance.', 20, currentY+20);
         }
 
         // Footer
         doc.setFontSize(10);
         doc.setTextColor(102, 102, 102);
-        doc.text('Contact: edu.WriteX@gmail.com | 078 8341315 | 076 571 3385', 105, 280, { align: 'center' });
-        doc.text('© EduWriteX', 105, 287, { align: 'center' });
+        doc.text('This is a computer-generated receipt.', 105, 270, { align: 'center' });
+        doc.text('Contact us 078 8341315 | 076 571 3385 | edu.WriteX@gmail.com', 105, 278, { align: 'center' });
+        doc.text('© EduWriteX', 105, 286, { align: 'center' });
 
         // Save PDF
-        let fileName = `PaymentBill_${employeeName.replace(/\s+/g,'_')}_${billType.replace(/\s+/g,'_')}_${currentDate}.pdf`;
+        let fileName = `EduWriteX_PaymentBill_${employeeName.replace(/\s+/g,'_')}_${billType.replace(/\s+/g,'_')}_${currentDate}.pdf`;
         doc.save(fileName);
         alert('✅ PDF exported: ' + fileName);
       };

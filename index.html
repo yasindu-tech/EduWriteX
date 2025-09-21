@@ -143,8 +143,12 @@
           <h3 class="h6 text-primary mb-3">Work Items</h3>
           <div id="workItemsContainer">
             <div class="work-item-row mb-3 p-3 border rounded bg-light">
-              <div class="d-flex align-items-center mb-2">
-                <span class="me-2 text-primary fw-bold order-number">1</span>
+              <div class="mb-3">
+                <label class="form-label text-primary">Order ID</label>
+                <input type="text" class="form-control order-id" placeholder="#001" value="#001" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label text-primary">Service Type</label>
                 <select class="form-select service-type">
                   <option value="Typing Service">Typing Service</option>
                   <option value="Service Assignment">Service Assignment</option>
@@ -224,20 +228,28 @@
     function updateOrderNumbers() {
       const workItems = document.querySelectorAll('.work-item-row');
       workItems.forEach((item, index) => {
-        const orderNumber = item.querySelector('.order-number');
-        if (orderNumber) {
-          orderNumber.textContent = (index + 1).toString();
+        const orderIdInput = item.querySelector('.order-id');
+        if (orderIdInput && !orderIdInput.value) {
+          const nextOrderId = `#${String(index + 1).padStart(3, '0')}`;
+          orderIdInput.value = nextOrderId;
         }
       });
     }
 
     function addWorkItem() {
       const container = document.getElementById('workItemsContainer');
+      const currentItems = container.querySelectorAll('.work-item-row').length;
+      const nextOrderId = `#${String(currentItems + 1).padStart(3, '0')}`;
+      
       const newRow = document.createElement('div');
       newRow.className = 'work-item-row mb-3 p-3 border rounded bg-light';
       newRow.innerHTML = `
-        <div class="d-flex align-items-center mb-2">
-          <span class="me-2 text-primary fw-bold order-number"></span>
+        <div class="mb-3">
+          <label class="form-label text-primary">Order ID</label>
+          <input type="text" class="form-control order-id" placeholder="${nextOrderId}" value="${nextOrderId}" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label text-primary">Service Type</label>
           <select class="form-select service-type">
             <option value="Typing Service">Typing Service</option>
             <option value="Service Assignment">Service Assignment</option>
@@ -266,12 +278,14 @@
       const workRows = document.querySelectorAll('.work-item-row');
       
       workRows.forEach(row => {
+        const orderId = row.querySelector('.order-id').value;
         const serviceType = row.querySelector('.service-type').value;
         const pages = parseInt(row.querySelector('.pages').value) || 0;
         const typeCost = parseFloat(row.querySelector('.type-cost').value) || 0;
         
-        if (pages > 0 && typeCost > 0) {
+        if (orderId && pages > 0 && typeCost > 0) {
           items.push({
+            orderId,
             serviceType,
             pages,
             typeCost,
@@ -419,8 +433,8 @@
         // Service details
         doc.setFont("helvetica", "bold");
         doc.text('Service Details:', 20, 120);
-        doc.text('#', 20, 130);
-        doc.text('Description', 35, 130);
+        doc.text('Order ID', 20, 130);
+        doc.text('Description', 55, 130);
         doc.text('Pages/Words', 95, 130);
         doc.text('Rate/Unit', 130, 130);
         doc.text('Amount', 170, 130);
@@ -432,8 +446,8 @@
         doc.setFont("helvetica", "normal");
         
         workItems.forEach((item, index) => {
-          doc.text((index + 1).toString(), 20, currentY);
-          doc.text(item.serviceType, 35, currentY);
+          doc.text(item.orderId, 20, currentY);
+          doc.text(item.serviceType, 55, currentY);
           doc.text(item.pages.toString(), 100, currentY);
           doc.text(`Rs. ${item.typeCost}`, 130, currentY);
           doc.text(`Rs. ${item.total}`, 170, currentY);
