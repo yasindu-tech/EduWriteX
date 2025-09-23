@@ -598,17 +598,16 @@
           currentY += 15;
         }
 
-        // Payment details
+        // Payment details - move to right and slightly above
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text('Payment Details:', 20, currentY + 30);
+        doc.text('Payment Details:', 140, currentY - 10);
         doc.setFont("helvetica", "normal");
-        
         // Format account details for PDF - split by | and display on separate lines
         const accountDetails = account.split(' | ');
-        let paymentY = currentY + 40;
+        let paymentY = currentY;
         accountDetails.forEach((detail, index) => {
-          doc.text(detail.trim(), 20, paymentY);
+          doc.text(detail.trim(), 140, paymentY);
           paymentY += 8;
         });
 
