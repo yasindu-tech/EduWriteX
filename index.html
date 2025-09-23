@@ -578,8 +578,25 @@
         // Bill Amount (instead of Grand Total)
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        const totalLabel = billTitle === 'Invoice' ? 'Grand Total' : `${billTitle} Amount`;
-        doc.text(`${totalLabel}: Rs. ${billAmount}`, 170, currentY, { align: 'right' });
+        if (billTitle === 'Final Bill') {
+          // Show Services Total
+          doc.setTextColor(0,0,0);
+          doc.text(`Services Total: Rs. ${servicesTotal}`, 20, currentY);
+          currentY += 12;
+          // Advance Paid in green
+          doc.setTextColor(34, 197, 94); // green
+          doc.text(`Advance Paid: Rs. ${(servicesTotal + additionalTotal - billAmount).toFixed(2)}`, 20, currentY);
+          currentY += 12;
+          // Final Bill Amount
+          doc.setTextColor(0,0,0);
+          doc.text(`Final Bill Amount: Rs. ${billAmount.toFixed(2)}`, 20, currentY);
+          currentY += 15;
+        } else {
+          const totalLabel = billTitle === 'Invoice' ? 'Grand Total' : `${billTitle} Amount`;
+          doc.setTextColor(0,0,0);
+          doc.text(`${totalLabel}: Rs. ${billAmount}`, 170, currentY, { align: 'right' });
+          currentY += 15;
+        }
 
         // Payment details
         doc.setFontSize(12);
